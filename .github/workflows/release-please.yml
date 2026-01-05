@@ -17,3 +17,4 @@ jobs:
         with:
           release-type: elixir
           skip-github-release: true
+          token: ${{ secrets.RELEASE_PAT }}
