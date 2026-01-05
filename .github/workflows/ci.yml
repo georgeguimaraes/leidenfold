@@ -56,7 +56,15 @@ jobs:
         run: |
           brew install cmake automake autoconf libtool bison flex
 
+      - name: Cache native libs
+        id: cache-native
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: native-libs-macos-14-igraph-${{ env.IGRAPH_VERSION }}-libleidenalg-${{ env.LIBLEIDENALG_VERSION }}
+
       - name: Build igraph (static)
+        if: steps.cache-native.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 --branch ${{ env.IGRAPH_VERSION }} https://github.com/igraph/igraph.git
           cd igraph
@@ -74,6 +82,7 @@ jobs:
           make install
 
       - name: Build libleidenalg (static)
+        if: steps.cache-native.outputs.cache-hit != 'true'
         run: |
           git clone --branch ${{ env.LIBLEIDENALG_VERSION }} --depth 1 https://github.com/vtraag/libleidenalg.git
           cd libleidenalg
@@ -85,6 +94,16 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF
           make -j$(sysctl -n hw.ncpu)
           make install
+
+      - name: Cache mix deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-
 
       - name: Get dependencies
         run: |
