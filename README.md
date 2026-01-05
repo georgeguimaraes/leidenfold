@@ -160,7 +160,8 @@ To build and test locally:
 
 ```bash
 # Install build dependencies (macOS)
-brew install cmake automake autoconf libtool bison flex rust
+brew install cmake automake autoconf libtool bison flex
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Clone the repo
 git clone https://github.com/georgeguimaraes/leidenfold.git
