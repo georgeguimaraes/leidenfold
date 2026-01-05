@@ -4,14 +4,30 @@ Elixir bindings for the Leiden community detection algorithm via [libleidenalg](
 
 The Leiden algorithm is a state-of-the-art method for detecting communities in networks. It guarantees well-connected communities and runs significantly faster than the Louvain algorithm.
 
-## Prerequisites
+## Installation
 
-Leidenfold requires the following native libraries to be installed:
+Add `leidenfold` to your list of dependencies in `mix.exs`:
 
-- **igraph** - graph library
-- **libleidenalg** - Leiden algorithm implementation
+```elixir
+def deps do
+  [
+    {:leidenfold, "~> 0.1.0"}
+  ]
+end
+```
 
-### macOS
+Precompiled binaries are available for:
+- macOS (Apple Silicon and Intel)
+- Linux (x86_64 and ARM64)
+
+No additional setup is required for these platforms.
+
+### Building from Source
+
+If precompiled binaries are not available for your platform, or you want to build from source, set `LEIDENFOLD_BUILD=true` and install the prerequisites:
+
+<details>
+<summary>macOS</summary>
 
 ```bash
 # Install igraph via Homebrew
@@ -24,9 +40,14 @@ mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
 make -j4
 make install
-```
 
-### Linux (Ubuntu/Debian)
+# Build leidenfold from source
+LEIDENFOLD_BUILD=true mix deps.compile leidenfold
+```
+</details>
+
+<details>
+<summary>Linux (Ubuntu/Debian)</summary>
 
 ```bash
 # Install igraph
@@ -39,34 +60,31 @@ mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
 make -j4
 make install
-```
 
-### Linux (Fedora/RHEL)
+# Build leidenfold from source
+LEIDENFOLD_BUILD=true mix deps.compile leidenfold
+```
+</details>
+
+<details>
+<summary>Linux (Fedora/RHEL)</summary>
 
 ```bash
 # Install igraph
 sudo dnf install igraph-devel
 
-# Build and install libleidenalg (same as above)
+# Build and install libleidenalg
 git clone https://github.com/vtraag/libleidenalg.git
 cd libleidenalg
 mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
 make -j4
 make install
+
+# Build leidenfold from source
+LEIDENFOLD_BUILD=true mix deps.compile leidenfold
 ```
-
-## Installation
-
-Add `leidenfold` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:leidenfold, "~> 0.1.0"}
-  ]
-end
-```
+</details>
 
 ## Usage
 

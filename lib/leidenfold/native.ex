@@ -1,6 +1,20 @@
 defmodule Leidenfold.Native do
   @moduledoc false
-  use Rustler, otp_app: :leidenfold, crate: "leidenfold_native"
+
+  version = Mix.Project.config()[:version]
+
+  use RustlerPrecompiled,
+    otp_app: :leidenfold,
+    crate: "leidenfold_native",
+    base_url: "https://github.com/georgeguimaraes/leidenfold/releases/download/v#{version}",
+    force_build: System.get_env("LEIDENFOLD_BUILD") in ["1", "true"],
+    version: version,
+    targets: [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu"
+    ]
 
   @doc """
   Detect communities using the Leiden algorithm.
