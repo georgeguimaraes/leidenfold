@@ -182,15 +182,8 @@ jobs:
 
           echo "Found library at: $LIB_PATH"
 
-          # Determine library extension for filename
-          if [[ "$LIB_NAME" == *.so ]]; then
-            LIB_EXT="so"
-          else
-            LIB_EXT="dylib"
-          fi
-
-          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.{ext}.tar.gz
-          ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.${LIB_EXT}.tar.gz"
+          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.tar.gz
+          ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.tar.gz"
 
           # Create archive with just the library file (no path)
           tar -czvf "$ARCHIVE_NAME" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
