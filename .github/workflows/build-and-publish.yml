@@ -1,9 +1,7 @@
-name: Build precompiled NIFs
+name: Build and Publish
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -61,6 +59,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake build-essential automake autoconf libtool bison flex
 
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install winflexbison3 -y
+          # Refresh environment
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
       - name: Build igraph (static, Unix)
         if: runner.os != 'Windows'
         run: |
@@ -83,6 +90,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          # Refresh PATH to include choco-installed tools
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
           git clone --depth 1 --branch 0.10.15 https://github.com/igraph/igraph.git
           cd igraph
           mkdir build
