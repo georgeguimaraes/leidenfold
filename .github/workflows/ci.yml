@@ -27,7 +27,7 @@ jobs:
   test:
     name: Test (OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }})
     needs: setup
-    runs-on: macos-14
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
@@ -52,16 +52,17 @@ jobs:
           otp-version: ${{ matrix.otp }}
           elixir-version: ${{ matrix.elixir }}
 
-      - name: Install dependencies (macOS)
+      - name: Install dependencies
         run: |
-          brew install cmake automake autoconf libtool bison flex
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential automake autoconf libtool bison flex
 
       - name: Cache native libs
         id: cache-native
         uses: actions/cache@v4
         with:
           path: ~/.local
-          key: native-libs-macos-14-igraph-${{ env.IGRAPH_VERSION }}-libleidenalg-${{ env.LIBLEIDENALG_VERSION }}
+          key: native-libs-ubuntu-igraph-${{ env.IGRAPH_VERSION }}-libleidenalg-${{ env.LIBLEIDENALG_VERSION }}
 
       - name: Build igraph (static)
         if: steps.cache-native.outputs.cache-hit != 'true'
@@ -78,7 +79,7 @@ jobs:
             -DIGRAPH_USE_INTERNAL_ARPACK=ON \
             -DIGRAPH_USE_INTERNAL_GLPK=ON \
             -DIGRAPH_USE_INTERNAL_GMP=ON
-          make -j$(sysctl -n hw.ncpu)
+          make -j$(nproc)
           make install
 
       - name: Build libleidenalg (static)
@@ -92,7 +93,7 @@ jobs:
             -DCMAKE_PREFIX_PATH="$HOME/.local" \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DBUILD_SHARED_LIBS=OFF
-          make -j$(sysctl -n hw.ncpu)
+          make -j$(nproc)
           make install
 
       - name: Cache mix deps
