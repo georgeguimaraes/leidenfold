@@ -11,13 +11,22 @@ on:
 permissions:
   contents: write
 
-env:
-  IGRAPH_VERSION: "0.10.15"
-  LIBLEIDENALG_VERSION: "0.11.1"
-
 jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      igraph_version: ${{ steps.versions.outputs.igraph }}
+      libleidenalg_version: ${{ steps.versions.outputs.libleidenalg }}
+    steps:
+      - id: versions
+        run: |
+          echo "igraph=0.10.15" >> $GITHUB_OUTPUT
+          echo "libleidenalg=0.11.1" >> $GITHUB_OUTPUT
+
   test:
     name: Test (OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }})
+    needs: setup
     runs-on: macos-14
 
     strategy:
@@ -27,6 +36,8 @@ jobs:
 
     env:
       LEIDENFOLD_BUILD: "true"
+      IGRAPH_VERSION: ${{ needs.setup.outputs.igraph_version }}
+      LIBLEIDENALG_VERSION: ${{ needs.setup.outputs.libleidenalg_version }}
 
     steps:
       - name: Checkout
@@ -92,11 +103,10 @@ jobs:
 
   build-and-publish:
     name: Build and Publish
-    needs: test
+    needs: [setup, test]
     if: startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/build-and-publish.yml
     with:
-      # Note: Keep these in sync with env vars above
-      igraph_version: "0.10.15"
-      libleidenalg_version: "0.11.1"
+      igraph_version: ${{ needs.setup.outputs.igraph_version }}
+      libleidenalg_version: ${{ needs.setup.outputs.libleidenalg_version }}
     secrets: inherit
