@@ -1,30 +1,15 @@
 name: Build and Publish
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  workflow_call:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag (e.g., v0.1.8)'
-        required: true
 
 permissions:
   contents: write
 
-env:
-  # For workflow_run: use the triggering workflow's branch (which is the tag)
-  # For workflow_dispatch: use the input version
-  VERSION: ${{ github.event.workflow_run.head_branch || github.event.inputs.version || github.ref_name }}
-
 jobs:
   build_release:
     name: NIF ${{ matrix.nif }} - ${{ matrix.job.target }}
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -43,8 +28,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ env.VERSION }}
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -197,8 +180,8 @@ jobs:
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
+          VERSION: ${{ github.ref_name }}
         run: |
-          VERSION="${{ env.VERSION }}"
           echo "=== Searching for built library ==="
           find . -name "libleidenfold_native.*" -type f 2>/dev/null || true
 
@@ -238,8 +221,8 @@ jobs:
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
+          VERSION: ${{ github.ref_name }}
         run: |
-          $VERSION = "${{ env.VERSION }}"
           Write-Host "=== Searching for built library ==="
           Get-ChildItem -Recurse -Filter "leidenfold_native.dll" | ForEach-Object { Write-Host $_.FullName }
 
@@ -263,8 +246,8 @@ jobs:
 
           Write-Host "Found library at: $dllPath"
 
-          $archiveName = "libleidenfold_native-$VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll.tar.gz"
-          $innerName = "libleidenfold_native-$VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll"
+          $archiveName = "libleidenfold_native-$env:VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll.tar.gz"
+          $innerName = "libleidenfold_native-$env:VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll"
 
           $tempDir = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath()) -Name ([System.Guid]::NewGuid().ToString())
           Copy-Item $dllPath -Destination "$($tempDir.FullName)\$innerName"
@@ -288,8 +271,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ env.VERSION }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -302,7 +283,6 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.VERSION }}
           files: artifacts/**/*.tar.gz
           generate_release_notes: true
 
@@ -323,7 +303,7 @@ jobs:
         run: |
           mkdir -p release_assets
           cd release_assets
-          gh release download "${{ env.VERSION }}" --pattern "*.tar.gz"
+          gh release download "${{ github.ref_name }}" --pattern "*.tar.gz"
 
       - name: Generate checksums
         run: |
@@ -347,14 +327,13 @@ jobs:
 
       - name: Commit and push checksums
         run: |
-          VERSION="${{ env.VERSION }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add checksum-Elixir.Leidenfold.Native.exs
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: Update checksums for $VERSION"
+            git commit -m "chore: Update checksums for ${{ github.ref_name }}"
             git push origin main
           fi
 
