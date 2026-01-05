@@ -19,7 +19,6 @@ end
 Precompiled binaries are available for:
 - macOS (Apple Silicon)
 - Linux (x86_64, ARM64)
-- Windows (x86_64)
 
 No additional setup is required for these platforms.
 
@@ -212,7 +211,6 @@ The CI pipeline runs on GitHub Actions:
    - macOS ARM64 (Apple Silicon)
    - Linux x86_64
    - Linux ARM64
-   - Windows x86_64 (uses winflexbison for flex/bison)
 3. **Release** - Uploads artifacts to GitHub Releases
 4. **Checksums** - Auto-generates and commits checksum file
 5. **Hex Publish** - Publishes to hex.pm

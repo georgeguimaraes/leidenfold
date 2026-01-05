@@ -37,7 +37,6 @@ jobs:
           - { target: aarch64-apple-darwin, os: macos-14 }
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04 }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm }
-          - { target: x86_64-pc-windows-msvc, os: windows-2022 }
 
     env:
       LEIDENFOLD_BUILD: "true"
@@ -52,15 +51,7 @@ jobs:
         with:
           targets: ${{ matrix.job.target }}
 
-      - name: Install Erlang/Elixir (Unix)
-        if: runner.os != 'Windows'
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: "26"
-          elixir-version: "1.16"
-
-      - name: Install Erlang/Elixir (Windows)
-        if: runner.os == 'Windows'
+      - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
           otp-version: "26"
@@ -77,16 +68,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake build-essential automake autoconf libtool bison flex
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install winflexbison3 -y
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
-      - name: Build igraph (static, Unix)
-        if: runner.os != 'Windows'
+      - name: Build igraph (static)
         run: |
           git clone --depth 1 --branch ${{ env.IGRAPH_VERSION }} https://github.com/igraph/igraph.git
           cd igraph
@@ -103,29 +85,7 @@ jobs:
           make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           make install
 
-      - name: Build igraph (static, Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          git clone --depth 1 --branch ${{ env.IGRAPH_VERSION }} https://github.com/igraph/igraph.git
-          cd igraph
-          mkdir build
-          cd build
-          cmake .. `
-            -DCMAKE_INSTALL_PREFIX="$env:USERPROFILE\.local" `
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-            -DBUILD_SHARED_LIBS=OFF `
-            -DIGRAPH_USE_INTERNAL_BLAS=ON `
-            -DIGRAPH_USE_INTERNAL_LAPACK=ON `
-            -DIGRAPH_USE_INTERNAL_ARPACK=ON `
-            -DIGRAPH_USE_INTERNAL_GLPK=ON `
-            -DIGRAPH_USE_INTERNAL_GMP=ON
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-
-      - name: Build libleidenalg (static, Unix)
-        if: runner.os != 'Windows'
+      - name: Build libleidenalg (static)
         run: |
           git clone --branch ${{ env.LIBLEIDENALG_VERSION }} --depth 1 https://github.com/vtraag/libleidenalg.git
           cd libleidenalg
@@ -138,39 +98,13 @@ jobs:
           make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
           make install
 
-      - name: Build libleidenalg (static, Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          git clone --branch ${{ env.LIBLEIDENALG_VERSION }} --depth 1 https://github.com/vtraag/libleidenalg.git
-          cd libleidenalg
-          mkdir build
-          cd build
-          cmake .. `
-            -DCMAKE_INSTALL_PREFIX="$env:USERPROFILE\.local" `
-            -DCMAKE_PREFIX_PATH="$env:USERPROFILE\.local" `
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-            -DBUILD_SHARED_LIBS=OFF
-          cmake --build . --config Release --parallel
-          cmake --install . --config Release
-
-      - name: Get mix deps (Unix)
-        if: runner.os != 'Windows'
+      - name: Get mix deps
         run: |
           mix local.hex --force
           mix local.rebar --force
           mix deps.get
 
-      - name: Get mix deps (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          mix local.hex --force
-          mix local.rebar --force
-          mix deps.get
-
-      - name: Build NIF (Unix)
-        if: runner.os != 'Windows'
+      - name: Build NIF
         env:
           NIF_VERSION: ${{ matrix.nif }}
           TARGET: ${{ matrix.job.target }}
@@ -180,21 +114,8 @@ jobs:
           export LEIDENFOLD_STATIC_INCLUDE_PATH="$HOME/.local/include"
           mix compile
 
-      - name: Build NIF (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          NIF_VERSION: ${{ matrix.nif }}
-          TARGET: ${{ matrix.job.target }}
-        run: |
-          $env:RUSTLER_NIF_VERSION = "$env:NIF_VERSION"
-          $env:LEIDENFOLD_STATIC_LIB_PATH = "$env:USERPROFILE\.local\lib"
-          $env:LEIDENFOLD_STATIC_INCLUDE_PATH = "$env:USERPROFILE\.local\include"
-          mix compile
-
-      - name: Create artifact (Unix)
-        if: runner.os != 'Windows'
-        id: artifact_unix
+      - name: Create artifact
+        id: artifact
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
@@ -232,55 +153,11 @@ jobs:
           echo "archive=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
           echo "archive_path=$(pwd)/$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Create artifact (Windows)
-        if: runner.os == 'Windows'
-        id: artifact_windows
-        shell: pwsh
-        env:
-          TARGET: ${{ matrix.job.target }}
-          NIF_VERSION: ${{ matrix.nif }}
-          VERSION: ${{ github.ref_name }}
-        run: |
-          Write-Host "=== Searching for built library ==="
-          Get-ChildItem -Recurse -Filter "leidenfold_native.dll" | ForEach-Object { Write-Host $_.FullName }
-
-          $dllPath = $null
-          $searchPaths = @(
-            "priv\native\leidenfold_native.dll",
-            "native\leidenfold_native\target\$env:TARGET\release\leidenfold_native.dll",
-            "native\leidenfold_native\target\release\leidenfold_native.dll"
-          )
-          foreach ($path in $searchPaths) {
-            if (Test-Path $path) {
-              $dllPath = $path
-              break
-            }
-          }
-
-          if (-not $dllPath) {
-            Write-Host "No library found!"
-            exit 1
-          }
-
-          Write-Host "Found library at: $dllPath"
-
-          $archiveName = "libleidenfold_native-$env:VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll.tar.gz"
-          $innerName = "libleidenfold_native-$env:VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll"
-
-          $tempDir = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath()) -Name ([System.Guid]::NewGuid().ToString())
-          Copy-Item $dllPath -Destination "$($tempDir.FullName)\$innerName"
-
-          tar -czvf $archiveName -C $tempDir.FullName $innerName
-          Remove-Item -Recurse -Force $tempDir
-
-          "archive=$archiveName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "archive_path=$((Get-Location).Path)\$archiveName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.artifact_unix.outputs.archive || steps.artifact_windows.outputs.archive }}
-          path: ${{ steps.artifact_unix.outputs.archive_path || steps.artifact_windows.outputs.archive_path }}
+          name: ${{ steps.artifact.outputs.archive }}
+          path: ${{ steps.artifact.outputs.archive_path }}
 
   publish:
     name: Publish release
