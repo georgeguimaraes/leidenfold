@@ -11,14 +11,15 @@ Add `leidenfold` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:leidenfold, "~> 0.1.0"}
+    {:leidenfold, "~> 0.1.8"}
   ]
 end
 ```
 
 Precompiled binaries are available for:
 - macOS (Apple Silicon)
-- Linux (x86_64)
+- Linux (x86_64, ARM64)
+- Windows (x86_64)
 
 No additional setup is required for these platforms.
 
@@ -119,7 +120,7 @@ result = Leidenfold.detect!(sources, targets)
 
 - `:cpm` - Constant Potts Model (default). Good for finding communities at different resolutions.
 - `:modularity` - Classic modularity optimization.
-- `:rber` - Reichardt-Bornholdt with Erdős-Rényi null model.
+- `:rber` - Reichardt-Bornholdt with Erdos-Renyi null model.
 - `:rbc` - Reichardt-Bornholdt with configuration model null model.
 - `:significance` - Significance-based community detection.
 - `:surprise` - Surprise-based community detection.
@@ -143,6 +144,79 @@ The `detect` functions return a map with:
 - `:membership` - List of community assignments (0-indexed)
 - `:n_communities` - Number of communities found
 - `:quality` - Quality function value (modularity, CPM score, etc.)
+
+## Contributing
+
+### Dependencies
+
+Leidenfold builds against these native libraries (statically linked in precompiled binaries):
+
+- [igraph](https://github.com/igraph/igraph) 0.10.15
+- [libleidenalg](https://github.com/vtraag/libleidenalg) 0.11.1
+
+### Development Setup
+
+To build and test locally:
+
+```bash
+# Install build dependencies (macOS)
+brew install cmake automake autoconf libtool bison flex rust
+
+# Clone the repo
+git clone https://github.com/georgeguimaraes/leidenfold.git
+cd leidenfold
+
+# Build igraph from source (static)
+git clone --depth 1 --branch 0.10.15 https://github.com/igraph/igraph.git
+cd igraph && mkdir build && cd build
+cmake .. \
+  -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DIGRAPH_USE_INTERNAL_BLAS=ON \
+  -DIGRAPH_USE_INTERNAL_LAPACK=ON \
+  -DIGRAPH_USE_INTERNAL_ARPACK=ON \
+  -DIGRAPH_USE_INTERNAL_GLPK=ON \
+  -DIGRAPH_USE_INTERNAL_GMP=ON
+make -j$(sysctl -n hw.ncpu)
+make install
+cd ../..
+
+# Build libleidenalg from source (static)
+git clone --depth 1 --branch 0.11.1 https://github.com/vtraag/libleidenalg.git
+cd libleidenalg && mkdir build && cd build
+cmake .. \
+  -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+  -DCMAKE_PREFIX_PATH="$HOME/.local" \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  -DBUILD_SHARED_LIBS=OFF
+make -j$(sysctl -n hw.ncpu)
+make install
+cd ../..
+
+# Build and test
+mix deps.get
+LEIDENFOLD_BUILD=true \
+  LEIDENFOLD_STATIC_LIB_PATH="$HOME/.local/lib" \
+  LEIDENFOLD_STATIC_INCLUDE_PATH="$HOME/.local/include" \
+  mix test
+```
+
+### CI Pipeline
+
+The CI pipeline runs on GitHub Actions:
+
+1. **Test job** - Runs on macOS with OTP 26 / Elixir 1.16
+2. **Build and Publish** - Triggered only on version tags (`v*`), builds precompiled NIFs for all platforms:
+   - macOS ARM64 (Apple Silicon)
+   - Linux x86_64
+   - Linux ARM64
+   - Windows x86_64 (uses winflexbison for flex/bison)
+3. **Release** - Uploads artifacts to GitHub Releases
+4. **Checksums** - Auto-generates and commits checksum file
+5. **Hex Publish** - Publishes to hex.pm
+
+NIFs are built for NIF versions 2.15, 2.16, and 2.17 to support different OTP versions.
 
 ## License
 
