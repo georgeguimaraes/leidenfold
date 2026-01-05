@@ -184,10 +184,12 @@ jobs:
 
           # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.so.tar.gz
           # rustler_precompiled expects .so.tar.gz extension for all platforms
+          # The file INSIDE the tarball must be named without .tar.gz extension
           ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so.tar.gz"
+          INNER_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so"
 
-          # Create archive with just the library file (no path)
-          tar -czvf "$ARCHIVE_NAME" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
+          # Create archive, renaming the library to match expected inner filename
+          tar -czvf "$ARCHIVE_NAME" --transform "s|${LIB_NAME}|${INNER_NAME}|" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
           echo "archive=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
           echo "archive_path=$(pwd)/$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
 
