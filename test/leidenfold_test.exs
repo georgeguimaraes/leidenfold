@@ -360,6 +360,50 @@ defmodule LeidenfoldTest do
 
       assert levels1 == levels2
     end
+
+    test "higher levels properly aggregate lower levels" do
+      # Three cliques loosely connected - should produce clear hierarchy
+      clique1 = for i <- 0..4, j <- 0..4, i < j, do: {i, j}
+      clique2 = for i <- 5..9, j <- 5..9, i < j, do: {i, j}
+      clique3 = for i <- 10..14, j <- 10..14, i < j, do: {i, j}
+      bridges = [{4, 5}, {9, 10}]
+
+      edges = clique1 ++ clique2 ++ clique3 ++ bridges
+      {sources, targets} = Enum.unzip(edges)
+
+      {:ok, levels} =
+        Leidenfold.detect_hierarchical(sources, targets,
+          objective: :modularity,
+          max_levels: 5,
+          seed: 42
+        )
+
+      # Verify hierarchical invariant: if two nodes are in the same community
+      # at level N, they must be in the same community at level N+1
+      for [level_n, level_n1] <- Enum.chunk_every(levels, 2, 1, :discard) do
+        membership_n = level_n.membership
+        membership_n1 = level_n1.membership
+
+        # For each pair of nodes in the same community at level N
+        for i <- 0..13, j <- (i + 1)..14 do
+          if Enum.at(membership_n, i) == Enum.at(membership_n, j) do
+            # They must also be in the same community at level N+1
+            assert Enum.at(membership_n1, i) == Enum.at(membership_n1, j),
+                   "Nodes #{i} and #{j} are in same community at level #{level_n.level} " <>
+                     "but different communities at level #{level_n1.level}"
+          end
+        end
+      end
+
+      # Verify community count decreases or stays same across levels
+      community_counts = Enum.map(levels, & &1.n_communities)
+
+      for [count_n, count_n1] <- Enum.chunk_every(community_counts, 2, 1, :discard) do
+        assert count_n1 <= count_n,
+               "Community count should decrease or stay same across levels, " <>
+                 "got #{count_n} -> #{count_n1}"
+      end
+    end
   end
 
   describe "detect_hierarchical!/3" do
