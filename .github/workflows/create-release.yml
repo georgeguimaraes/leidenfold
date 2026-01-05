@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: "${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'autorelease: pending') }}"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from PR title
+        id: version
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          VERSION=$(echo "$PR_TITLE" | grep -oP 'release \K[0-9]+\.[0-9]+\.[0-9]+')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+        # The tag push will trigger the build-nif workflow which creates the release
