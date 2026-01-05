@@ -182,8 +182,9 @@ jobs:
 
           echo "Found library at: $LIB_PATH"
 
-          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.tar.gz
-          ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.tar.gz"
+          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.so.tar.gz
+          # rustler_precompiled expects .so.tar.gz extension for all platforms
+          ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so.tar.gz"
 
           # Create archive with just the library file (no path)
           tar -czvf "$ARCHIVE_NAME" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
