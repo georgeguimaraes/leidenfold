@@ -188,8 +188,11 @@ jobs:
           ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so.tar.gz"
           INNER_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so"
 
-          # Create archive, renaming the library to match expected inner filename
-          tar -czvf "$ARCHIVE_NAME" --transform "s|${LIB_NAME}|${INNER_NAME}|" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
+          # Copy to temp dir with correct name, then create archive (works on macOS and Linux)
+          TEMP_DIR=$(mktemp -d)
+          cp "$LIB_PATH" "$TEMP_DIR/$INNER_NAME"
+          tar -czvf "$ARCHIVE_NAME" -C "$TEMP_DIR" "$INNER_NAME"
+          rm -rf "$TEMP_DIR"
           echo "archive=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
           echo "archive_path=$(pwd)/$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
 
