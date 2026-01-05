@@ -9,6 +9,7 @@ defmodule Leidenfold.Native do
     base_url: "https://github.com/georgeguimaraes/leidenfold/releases/download/v#{version}",
     force_build: System.get_env("LEIDENFOLD_BUILD") in ["1", "true"],
     version: version,
+    nif_versions: ["2.15", "2.16", "2.17"],
     targets: [
       "aarch64-apple-darwin",
       "x86_64-unknown-linux-gnu"

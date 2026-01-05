@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nif: ["2.16"]
+        nif: ["2.15", "2.16", "2.17"]
         job:
           - { target: aarch64-apple-darwin, os: macos-14 }
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04 }
@@ -149,6 +149,7 @@ jobs:
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
+          VERSION: ${{ github.ref_name }}
         run: |
           # Debug: show where libraries might be
           echo "=== Searching for built library ==="
@@ -180,7 +181,16 @@ jobs:
           fi
 
           echo "Found library at: $LIB_PATH"
-          ARCHIVE_NAME="leidenfold_native-nif-$NIF_VERSION-$TARGET.tar.gz"
+
+          # Determine library extension for filename
+          if [[ "$LIB_NAME" == *.so ]]; then
+            LIB_EXT="so"
+          else
+            LIB_EXT="dylib"
+          fi
+
+          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.{ext}.tar.gz
+          ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.${LIB_EXT}.tar.gz"
 
           # Create archive with just the library file (no path)
           tar -czvf "$ARCHIVE_NAME" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
