@@ -98,7 +98,7 @@ jobs:
         env:
           USE_CROSS: ${{ matrix.job.use-cross }}
         run: |
-          git clone --branch v0.11.1 --depth 1 https://github.com/vtraag/libleidenalg.git
+          git clone --branch 0.11.1 --depth 1 https://github.com/vtraag/libleidenalg.git
           cd libleidenalg
           mkdir build && cd build
           if [ "$USE_CROSS" = "true" ]; then
