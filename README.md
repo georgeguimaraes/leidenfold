@@ -11,7 +11,7 @@ Add `leidenfold` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:leidenfold, "~> 0.1.8"}
+    {:leidenfold, "~> 0.2.0"}
   ]
 end
 ```
@@ -90,11 +90,16 @@ LEIDENFOLD_BUILD=true mix deps.compile leidenfold
 
 ```elixir
 # Basic usage with edge tuples
+# Two triangles connected by edge 2-3:
+#     0               3
+#    / \             / \
+#   1---2 --------- 4---5
 edges = [{0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 5}, {5, 3}, {2, 3}]
 {:ok, result} = Leidenfold.detect_from_edges(edges)
 # => {:ok, %{membership: [0, 0, 0, 1, 1, 1], n_communities: 2, quality: 0.0}}
+# Nodes 0,1,2 form community 0; nodes 3,4,5 form community 1
 
-# Using source/target lists
+# Same graph using source/target lists (pairs source[i] -> target[i])
 sources = [0, 1, 2, 3, 4, 5, 2]
 targets = [1, 2, 0, 4, 5, 3, 3]
 {:ok, result} = Leidenfold.detect(sources, targets)
@@ -206,8 +211,8 @@ LEIDENFOLD_BUILD=true \
 
 The CI pipeline runs on GitHub Actions:
 
-1. **Test job** - Runs on macOS with OTP 26 / Elixir 1.16
-2. **Build and Publish** - Triggered only on version tags (`v*`), builds precompiled NIFs for all platforms:
+1. **Test job** - Runs on Linux with OTP 26/27/28 and Elixir 1.17/1.18/1.19 (8 combinations)
+2. **Build and Publish** - Triggered on version tags (`v*`), builds precompiled NIFs:
    - macOS ARM64 (Apple Silicon)
    - Linux x86_64
    - Linux ARM64
@@ -215,7 +220,7 @@ The CI pipeline runs on GitHub Actions:
 4. **Checksums** - Auto-generates and commits checksum file
 5. **Hex Publish** - Publishes to hex.pm
 
-NIFs are built for NIF versions 2.15, 2.16, and 2.17 to support different OTP versions.
+NIFs are built for NIF versions 2.15, 2.16, and 2.17 to support OTP 22+.
 
 ## License
 
