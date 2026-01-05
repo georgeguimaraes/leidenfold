@@ -124,10 +124,9 @@ LeidenResult* leiden_find_communities(
     }
     optimiser.consider_empty_community = opts.consider_empty_community;
 
-    double quality = 0.0;
     try {
         for (size_t i = 0; i < opts.n_iterations; i++) {
-            quality = optimiser.optimise_partition(partition);
+            optimiser.optimise_partition(partition);
         }
     } catch (const std::exception& e) {
         delete partition;
@@ -135,6 +134,9 @@ LeidenResult* leiden_find_communities(
         igraph_destroy(&graph);
         return create_error_result(e.what());
     }
+
+    // Get the actual quality score from the partition
+    double quality = partition->quality();
 
     // Extract membership
     const std::vector<size_t>& membership = partition->membership();
