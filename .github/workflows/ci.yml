@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+env:
+  IGRAPH_VERSION: "0.10.15"
+  LIBLEIDENALG_VERSION: "0.11.1"
+
 jobs:
   test:
     name: Test (OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }})
@@ -43,7 +47,7 @@ jobs:
 
       - name: Build igraph (static)
         run: |
-          git clone --depth 1 --branch 0.10.15 https://github.com/igraph/igraph.git
+          git clone --depth 1 --branch ${{ env.IGRAPH_VERSION }} https://github.com/igraph/igraph.git
           cd igraph
           mkdir build && cd build
           cmake .. \
@@ -60,7 +64,7 @@ jobs:
 
       - name: Build libleidenalg (static)
         run: |
-          git clone --branch 0.11.1 --depth 1 https://github.com/vtraag/libleidenalg.git
+          git clone --branch ${{ env.LIBLEIDENALG_VERSION }} --depth 1 https://github.com/vtraag/libleidenalg.git
           cd libleidenalg
           mkdir build && cd build
           cmake .. \
@@ -91,4 +95,7 @@ jobs:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/build-and-publish.yml
+    with:
+      igraph_version: ${{ env.IGRAPH_VERSION }}
+      libleidenalg_version: ${{ env.LIBLEIDENALG_VERSION }}
     secrets: inherit

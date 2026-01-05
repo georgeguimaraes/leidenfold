@@ -2,10 +2,28 @@ name: Build and Publish
 
 on:
   workflow_call:
+    inputs:
+      igraph_version:
+        type: string
+        default: "0.10.15"
+      libleidenalg_version:
+        type: string
+        default: "0.11.1"
   workflow_dispatch:
+    inputs:
+      igraph_version:
+        description: "igraph version"
+        default: "0.10.15"
+      libleidenalg_version:
+        description: "libleidenalg version"
+        default: "0.11.1"
 
 permissions:
   contents: write
+
+env:
+  IGRAPH_VERSION: ${{ inputs.igraph_version }}
+  LIBLEIDENALG_VERSION: ${{ inputs.libleidenalg_version }}
 
 jobs:
   build_release:
@@ -70,7 +88,7 @@ jobs:
       - name: Build igraph (static, Unix)
         if: runner.os != 'Windows'
         run: |
-          git clone --depth 1 --branch 0.10.15 https://github.com/igraph/igraph.git
+          git clone --depth 1 --branch ${{ env.IGRAPH_VERSION }} https://github.com/igraph/igraph.git
           cd igraph
           mkdir build && cd build
           cmake .. \
@@ -90,7 +108,7 @@ jobs:
         shell: pwsh
         run: |
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          git clone --depth 1 --branch 0.10.15 https://github.com/igraph/igraph.git
+          git clone --depth 1 --branch ${{ env.IGRAPH_VERSION }} https://github.com/igraph/igraph.git
           cd igraph
           mkdir build
           cd build
@@ -109,7 +127,7 @@ jobs:
       - name: Build libleidenalg (static, Unix)
         if: runner.os != 'Windows'
         run: |
-          git clone --branch 0.11.1 --depth 1 https://github.com/vtraag/libleidenalg.git
+          git clone --branch ${{ env.LIBLEIDENALG_VERSION }} --depth 1 https://github.com/vtraag/libleidenalg.git
           cd libleidenalg
           mkdir build && cd build
           cmake .. \
@@ -124,7 +142,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          git clone --branch 0.11.1 --depth 1 https://github.com/vtraag/libleidenalg.git
+          git clone --branch ${{ env.LIBLEIDENALG_VERSION }} --depth 1 https://github.com/vtraag/libleidenalg.git
           cd libleidenalg
           mkdir build
           cd build
