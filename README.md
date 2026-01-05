@@ -18,7 +18,7 @@ end
 
 Precompiled binaries are available for:
 - macOS (Apple Silicon)
-- Linux (x86_64 and ARM64)
+- Linux (x86_64)
 
 No additional setup is required for these platforms.
 

@@ -20,7 +20,8 @@ jobs:
         job:
           - { target: aarch64-apple-darwin, os: macos-14 }
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04 }
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04, use-cross: true }
+          # ARM64 Linux temporarily disabled - igraph cross-compilation needs F2C_EXTERNAL_ARITH_HEADER
+          # - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04, use-cross: true }
 
     env:
       LEIDENFOLD_BUILD: "true"
@@ -75,6 +76,7 @@ jobs:
               -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
               -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
               -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
               -DBUILD_SHARED_LIBS=OFF \
               -DIGRAPH_USE_INTERNAL_BLAS=ON \
               -DIGRAPH_USE_INTERNAL_LAPACK=ON \
@@ -84,6 +86,7 @@ jobs:
           else
             cmake .. \
               -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
               -DBUILD_SHARED_LIBS=OFF \
               -DIGRAPH_USE_INTERNAL_BLAS=ON \
               -DIGRAPH_USE_INTERNAL_LAPACK=ON \
@@ -109,11 +112,13 @@ jobs:
               -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
               -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
               -DCMAKE_PREFIX_PATH="$HOME/.local" \
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
               -DBUILD_SHARED_LIBS=OFF
           else
             cmake .. \
               -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
               -DCMAKE_PREFIX_PATH="$HOME/.local" \
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
               -DBUILD_SHARED_LIBS=OFF
           fi
           make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
@@ -145,25 +150,40 @@ jobs:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
         run: |
-          ARTIFACT_DIR="native/leidenfold_native/target/$TARGET/release"
-          if [ -d "$ARTIFACT_DIR" ]; then
-            cd "$ARTIFACT_DIR"
-          else
-            cd "native/leidenfold_native/target/release"
-          fi
+          # Debug: show where libraries might be
+          echo "=== Searching for built library ==="
+          find . -name "libleidenfold_native.*" -type f 2>/dev/null || true
 
-          if [ -f "libleidenfold_native.so" ]; then
+          # Look in priv/native first (where rustler_precompiled puts it)
+          if [ -f "priv/native/libleidenfold_native.so" ]; then
+            LIB_PATH="priv/native/libleidenfold_native.so"
             LIB_NAME="libleidenfold_native.so"
-          elif [ -f "libleidenfold_native.dylib" ]; then
+          elif [ -f "priv/native/libleidenfold_native.dylib" ]; then
+            LIB_PATH="priv/native/libleidenfold_native.dylib"
+            LIB_NAME="libleidenfold_native.dylib"
+          # Fall back to cargo target directory
+          elif [ -f "native/leidenfold_native/target/$TARGET/release/libleidenfold_native.so" ]; then
+            LIB_PATH="native/leidenfold_native/target/$TARGET/release/libleidenfold_native.so"
+            LIB_NAME="libleidenfold_native.so"
+          elif [ -f "native/leidenfold_native/target/$TARGET/release/libleidenfold_native.dylib" ]; then
+            LIB_PATH="native/leidenfold_native/target/$TARGET/release/libleidenfold_native.dylib"
+            LIB_NAME="libleidenfold_native.dylib"
+          elif [ -f "native/leidenfold_native/target/release/libleidenfold_native.so" ]; then
+            LIB_PATH="native/leidenfold_native/target/release/libleidenfold_native.so"
+            LIB_NAME="libleidenfold_native.so"
+          elif [ -f "native/leidenfold_native/target/release/libleidenfold_native.dylib" ]; then
+            LIB_PATH="native/leidenfold_native/target/release/libleidenfold_native.dylib"
             LIB_NAME="libleidenfold_native.dylib"
           else
             echo "No library found!"
-            ls -la
             exit 1
           fi
 
+          echo "Found library at: $LIB_PATH"
           ARCHIVE_NAME="leidenfold_native-nif-$NIF_VERSION-$TARGET.tar.gz"
-          tar -czvf "$ARCHIVE_NAME" "$LIB_NAME"
+
+          # Create archive with just the library file (no path)
+          tar -czvf "$ARCHIVE_NAME" -C "$(dirname "$LIB_PATH")" "$LIB_NAME"
           echo "archive=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
           echo "archive_path=$(pwd)/$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
 

@@ -11,8 +11,8 @@ defmodule Leidenfold.Native do
     version: version,
     targets: [
       "aarch64-apple-darwin",
-      "x86_64-unknown-linux-gnu",
-      "aarch64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu"
+      # ARM64 Linux temporarily disabled - use LEIDENFOLD_BUILD=true to build from source
     ]
 
   @doc """
