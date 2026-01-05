@@ -1,15 +1,30 @@
 name: Build and Publish
 
 on:
-  workflow_call:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v0.1.8)'
+        required: true
 
 permissions:
   contents: write
 
+env:
+  # For workflow_run: use the triggering workflow's branch (which is the tag)
+  # For workflow_dispatch: use the input version
+  VERSION: ${{ github.event.workflow_run.head_branch || github.event.inputs.version || github.ref_name }}
+
 jobs:
   build_release:
     name: NIF ${{ matrix.nif }} - ${{ matrix.job.target }}
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -28,6 +43,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VERSION }}
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -65,7 +82,6 @@ jobs:
         run: |
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
           choco install winflexbison3 -y
-          # Refresh environment
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
       - name: Build igraph (static, Unix)
@@ -90,9 +106,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          # Refresh PATH to include choco-installed tools
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
           git clone --depth 1 --branch 0.10.15 https://github.com/igraph/igraph.git
           cd igraph
           mkdir build
@@ -183,30 +197,23 @@ jobs:
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
-          VERSION: ${{ github.ref_name }}
         run: |
+          VERSION="${{ env.VERSION }}"
           echo "=== Searching for built library ==="
           find . -name "libleidenfold_native.*" -type f 2>/dev/null || true
 
-          # Look in priv/native first (where rustler_precompiled puts it)
           if [ -f "priv/native/libleidenfold_native.so" ]; then
             LIB_PATH="priv/native/libleidenfold_native.so"
-            LIB_NAME="libleidenfold_native.so"
           elif [ -f "priv/native/libleidenfold_native.dylib" ]; then
             LIB_PATH="priv/native/libleidenfold_native.dylib"
-            LIB_NAME="libleidenfold_native.dylib"
           elif [ -f "native/leidenfold_native/target/$TARGET/release/libleidenfold_native.so" ]; then
             LIB_PATH="native/leidenfold_native/target/$TARGET/release/libleidenfold_native.so"
-            LIB_NAME="libleidenfold_native.so"
           elif [ -f "native/leidenfold_native/target/$TARGET/release/libleidenfold_native.dylib" ]; then
             LIB_PATH="native/leidenfold_native/target/$TARGET/release/libleidenfold_native.dylib"
-            LIB_NAME="libleidenfold_native.dylib"
           elif [ -f "native/leidenfold_native/target/release/libleidenfold_native.so" ]; then
             LIB_PATH="native/leidenfold_native/target/release/libleidenfold_native.so"
-            LIB_NAME="libleidenfold_native.so"
           elif [ -f "native/leidenfold_native/target/release/libleidenfold_native.dylib" ]; then
             LIB_PATH="native/leidenfold_native/target/release/libleidenfold_native.dylib"
-            LIB_NAME="libleidenfold_native.dylib"
           else
             echo "No library found!"
             exit 1
@@ -214,11 +221,9 @@ jobs:
 
           echo "Found library at: $LIB_PATH"
 
-          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.so.tar.gz
           ARCHIVE_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so.tar.gz"
           INNER_NAME="libleidenfold_native-${VERSION}-nif-${NIF_VERSION}-${TARGET}.so"
 
-          # Copy to temp dir with correct name, then create archive
           TEMP_DIR=$(mktemp -d)
           cp "$LIB_PATH" "$TEMP_DIR/$INNER_NAME"
           tar -czvf "$ARCHIVE_NAME" -C "$TEMP_DIR" "$INNER_NAME"
@@ -233,12 +238,11 @@ jobs:
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
-          VERSION: ${{ github.ref_name }}
         run: |
+          $VERSION = "${{ env.VERSION }}"
           Write-Host "=== Searching for built library ==="
           Get-ChildItem -Recurse -Filter "leidenfold_native.dll" | ForEach-Object { Write-Host $_.FullName }
 
-          # Find the DLL
           $dllPath = $null
           $searchPaths = @(
             "priv\native\leidenfold_native.dll",
@@ -259,15 +263,12 @@ jobs:
 
           Write-Host "Found library at: $dllPath"
 
-          # Format: lib{crate_name}-v{version}-nif-{nif_version}-{target}.dll.tar.gz
-          $archiveName = "libleidenfold_native-$env:VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll.tar.gz"
-          $innerName = "libleidenfold_native-$env:VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll"
+          $archiveName = "libleidenfold_native-$VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll.tar.gz"
+          $innerName = "libleidenfold_native-$VERSION-nif-$env:NIF_VERSION-$env:TARGET.dll"
 
-          # Copy to temp dir with correct name
           $tempDir = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath()) -Name ([System.Guid]::NewGuid().ToString())
           Copy-Item $dllPath -Destination "$($tempDir.FullName)\$innerName"
 
-          # Create tarball using tar (available on Windows)
           tar -czvf $archiveName -C $tempDir.FullName $innerName
           Remove-Item -Recurse -Force $tempDir
 
@@ -287,6 +288,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VERSION }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -298,8 +301,8 @@ jobs:
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ env.VERSION }}
           files: artifacts/**/*.tar.gz
           generate_release_notes: true
 
@@ -307,7 +310,6 @@ jobs:
     name: Update checksums
     needs: publish
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -321,12 +323,11 @@ jobs:
         run: |
           mkdir -p release_assets
           cd release_assets
-          gh release download "${{ github.ref_name }}" --pattern "*.tar.gz"
+          gh release download "${{ env.VERSION }}" --pattern "*.tar.gz"
 
       - name: Generate checksums
         run: |
           cd release_assets
-          # Generate Elixir map format checksum file
           echo '%{' > ../checksum-Elixir.Leidenfold.Native.exs
           first=true
           for file in *.tar.gz; do
@@ -346,13 +347,14 @@ jobs:
 
       - name: Commit and push checksums
         run: |
+          VERSION="${{ env.VERSION }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add checksum-Elixir.Leidenfold.Native.exs
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: Update checksums for ${{ github.ref_name }}"
+            git commit -m "chore: Update checksums for $VERSION"
             git push origin main
           fi
 
@@ -360,12 +362,11 @@ jobs:
     name: Publish to Hex
     needs: update_checksums
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: main  # Get the updated checksums
+          ref: main
 
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1

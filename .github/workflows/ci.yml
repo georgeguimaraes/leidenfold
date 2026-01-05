@@ -8,9 +8,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   test:
     name: Test (OTP ${{ matrix.otp }} / Elixir ${{ matrix.elixir }})
@@ -85,10 +82,3 @@ jobs:
 
       - name: Run tests
         run: mix test
-
-  build-and-publish:
-    name: Build and Publish
-    needs: test
-    if: startsWith(github.ref, 'refs/tags/')
-    uses: ./.github/workflows/build-and-publish.yml
-    secrets: inherit
