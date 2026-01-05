@@ -13,7 +13,6 @@
 #include <cstring>
 #include <vector>
 #include <string>
-#include <map>
 
 extern "C" {
 
@@ -247,14 +246,36 @@ LeidenHierarchicalResult* leiden_find_hierarchical_communities(
     std::vector<size_t> level_n_communities;
     std::vector<double> level_qualities;
 
-    // Current graph data (starts with original)
-    std::vector<int64_t> cur_sources(sources, sources + n_edges);
-    std::vector<int64_t> cur_targets(targets, targets + n_edges);
-    std::vector<double> cur_weights;
-    if (weights) {
-        cur_weights.assign(weights, weights + n_edges);
+    // Create initial igraph
+    igraph_t graph;
+    igraph_vector_int_t edges;
+    igraph_vector_int_init(&edges, n_edges * 2);
+    for (size_t i = 0; i < n_edges; i++) {
+        VECTOR(edges)[i * 2] = sources[i];
+        VECTOR(edges)[i * 2 + 1] = targets[i];
     }
-    size_t cur_n_nodes = n_nodes;
+
+    igraph_error_t err = igraph_create(&graph, &edges, n_nodes,
+        directed ? IGRAPH_DIRECTED : IGRAPH_UNDIRECTED);
+    igraph_vector_int_destroy(&edges);
+
+    if (err != IGRAPH_SUCCESS) {
+        return create_hierarchical_error_result("Failed to create igraph");
+    }
+
+    // Create initial Graph wrapper
+    Graph* leiden_graph;
+    try {
+        if (weights != nullptr) {
+            std::vector<double> edge_weights_vec(weights, weights + n_edges);
+            leiden_graph = Graph::GraphFromEdgeWeights(&graph, edge_weights_vec);
+        } else {
+            leiden_graph = new Graph(&graph);
+        }
+    } catch (const std::exception& e) {
+        igraph_destroy(&graph);
+        return create_hierarchical_error_result(e.what());
+    }
 
     // Track mapping from current nodes back to original nodes
     // Initially each node maps to itself
@@ -263,38 +284,10 @@ LeidenHierarchicalResult* leiden_find_hierarchical_communities(
         node_to_original[i].push_back(i);
     }
 
+    size_t cur_n_nodes = n_nodes;
+
     for (size_t level = 0; level < max_levels; level++) {
-        // Create igraph
-        igraph_t graph;
-        igraph_vector_int_t edges;
-        igraph_vector_int_init(&edges, cur_sources.size() * 2);
-        for (size_t i = 0; i < cur_sources.size(); i++) {
-            VECTOR(edges)[i * 2] = cur_sources[i];
-            VECTOR(edges)[i * 2 + 1] = cur_targets[i];
-        }
-
-        igraph_error_t err = igraph_create(&graph, &edges, cur_n_nodes,
-            directed ? IGRAPH_DIRECTED : IGRAPH_UNDIRECTED);
-        igraph_vector_int_destroy(&edges);
-
-        if (err != IGRAPH_SUCCESS) {
-            return create_hierarchical_error_result("Failed to create igraph");
-        }
-
-        // Create Graph wrapper
-        Graph* leiden_graph;
-        try {
-            if (!cur_weights.empty()) {
-                leiden_graph = Graph::GraphFromEdgeWeights(&graph, cur_weights);
-            } else {
-                leiden_graph = new Graph(&graph);
-            }
-        } catch (const std::exception& e) {
-            igraph_destroy(&graph);
-            return create_hierarchical_error_result(e.what());
-        }
-
-        // Run Leiden
+        // Run Leiden on current graph
         MutableVertexPartition* partition;
         try {
             partition = run_leiden_on_graph(leiden_graph, opts, optimiser);
@@ -332,7 +325,7 @@ LeidenHierarchicalResult* leiden_find_hierarchical_communities(
                     comm_remap[c] = new_comm++;
                 }
             }
-            // Apply remapping (nodes in small communities get SIZE_MAX, will be excluded)
+            // Apply remapping
             size_t filtered_n_communities = new_comm;
             for (size_t& m : original_membership) {
                 m = comm_remap[m];
@@ -352,25 +345,19 @@ LeidenHierarchicalResult* leiden_find_hierarchical_communities(
             break;
         }
 
-        // Build aggregated graph for next level
-        // Communities become nodes, edges weighted by inter-community connections
-        size_t agg_n_nodes = partition->n_communities();
-        std::map<std::pair<size_t, size_t>, double> agg_edge_weights;
-
-        for (size_t e = 0; e < cur_sources.size(); e++) {
-            size_t src_comm = membership[cur_sources[e]];
-            size_t tgt_comm = membership[cur_targets[e]];
-            if (src_comm != tgt_comm) {
-                // Normalize edge direction for consistency
-                auto key = src_comm < tgt_comm
-                    ? std::make_pair(src_comm, tgt_comm)
-                    : std::make_pair(tgt_comm, src_comm);
-                double w = cur_weights.empty() ? 1.0 : cur_weights[e];
-                agg_edge_weights[key] += w;
-            }
+        // Use library's collapse_graph to build aggregated graph
+        Graph* collapsed_graph;
+        try {
+            collapsed_graph = leiden_graph->collapse_graph(partition);
+        } catch (const std::exception& e) {
+            delete partition;
+            delete leiden_graph;
+            igraph_destroy(&graph);
+            return create_hierarchical_error_result(e.what());
         }
 
         // Build new node_to_original mapping
+        size_t agg_n_nodes = partition->n_communities();
         std::vector<std::vector<size_t>> new_node_to_original(agg_n_nodes);
         for (size_t cur_node = 0; cur_node < cur_n_nodes; cur_node++) {
             size_t comm = membership[cur_node];
@@ -379,24 +366,18 @@ LeidenHierarchicalResult* leiden_find_hierarchical_communities(
             }
         }
         node_to_original = std::move(new_node_to_original);
-
-        // Convert aggregated edges to vectors
-        cur_sources.clear();
-        cur_targets.clear();
-        cur_weights.clear();
-        for (const auto& [key, weight] : agg_edge_weights) {
-            cur_sources.push_back(key.first);
-            cur_targets.push_back(key.second);
-            cur_weights.push_back(weight);
-        }
         cur_n_nodes = agg_n_nodes;
 
+        // Cleanup old graph, use collapsed graph for next iteration
         delete partition;
         delete leiden_graph;
         igraph_destroy(&graph);
 
-        // Stop if no edges remain
-        if (cur_sources.empty()) {
+        leiden_graph = collapsed_graph;
+
+        // Stop if collapsed graph has no edges
+        if (leiden_graph->ecount() == 0) {
+            delete leiden_graph;
             break;
         }
     }
