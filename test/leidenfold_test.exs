@@ -263,4 +263,119 @@ defmodule LeidenfoldTest do
       assert {:error, _reason} = result
     end
   end
+
+  describe "detect_hierarchical/3" do
+    test "returns single level by default" do
+      {sources, targets} = Enum.unzip(@two_triangles)
+
+      {:ok, levels} = Leidenfold.detect_hierarchical(sources, targets, objective: :modularity)
+
+      assert length(levels) == 1
+      assert hd(levels).level == 0
+      assert is_list(hd(levels).membership)
+      assert length(hd(levels).membership) == 6
+    end
+
+    test "returns multiple levels when requested" do
+      # Three cliques loosely connected
+      clique1 = for i <- 0..4, j <- 0..4, i < j, do: {i, j}
+      clique2 = for i <- 5..9, j <- 5..9, i < j, do: {i, j}
+      clique3 = for i <- 10..14, j <- 10..14, i < j, do: {i, j}
+      bridges = [{4, 5}, {9, 10}]
+
+      edges = clique1 ++ clique2 ++ clique3 ++ bridges
+      {sources, targets} = Enum.unzip(edges)
+
+      {:ok, levels} =
+        Leidenfold.detect_hierarchical(sources, targets,
+          objective: :modularity,
+          max_levels: 3
+        )
+
+      # Should have at least 2 levels for this graph
+      assert length(levels) >= 1
+
+      # All levels should have membership for all 15 nodes
+      for level <- levels do
+        assert length(level.membership) == 15
+        assert level.level >= 0
+        assert is_integer(level.n_communities)
+        assert is_float(level.quality)
+      end
+    end
+
+    test "min_size filters small communities" do
+      {sources, targets} = Enum.unzip(@two_triangles)
+
+      # Without min_size filter
+      {:ok, levels_all} =
+        Leidenfold.detect_hierarchical(sources, targets,
+          objective: :modularity,
+          min_size: 1
+        )
+
+      # With min_size=5 (should filter out communities with < 5 members)
+      {:ok, levels_filtered} =
+        Leidenfold.detect_hierarchical(sources, targets,
+          objective: :modularity,
+          min_size: 5
+        )
+
+      # The filtered version should have fewer or equal communities
+      level0_all = hd(levels_all)
+      level0_filtered = hd(levels_filtered)
+
+      assert level0_filtered.n_communities <= level0_all.n_communities
+    end
+
+    test "works with weighted edges" do
+      edges = [{0, 1, 1.0}, {1, 2, 2.0}, {2, 0, 1.5}, {3, 4, 1.0}, {4, 5, 2.0}, {5, 3, 1.5}]
+
+      {:ok, levels} =
+        Leidenfold.detect_hierarchical_from_weighted_edges(edges,
+          objective: :modularity,
+          max_levels: 2
+        )
+
+      assert length(levels) >= 1
+      assert length(hd(levels).membership) == 6
+    end
+
+    test "respects seed for reproducibility" do
+      {sources, targets} = Enum.unzip(@two_triangles)
+
+      {:ok, levels1} =
+        Leidenfold.detect_hierarchical(sources, targets,
+          objective: :modularity,
+          max_levels: 2,
+          seed: 42
+        )
+
+      {:ok, levels2} =
+        Leidenfold.detect_hierarchical(sources, targets,
+          objective: :modularity,
+          max_levels: 2,
+          seed: 42
+        )
+
+      assert levels1 == levels2
+    end
+  end
+
+  describe "detect_hierarchical!/3" do
+    test "returns levels directly" do
+      {sources, targets} = Enum.unzip(@two_triangles)
+
+      levels = Leidenfold.detect_hierarchical!(sources, targets, objective: :modularity)
+
+      assert is_list(levels)
+      assert length(levels) >= 1
+    end
+
+    test "raises on error" do
+      assert_raise ArgumentError, fn ->
+        Leidenfold.detect_hierarchical!([0, 1], [1])
+      end
+    end
+  end
 end

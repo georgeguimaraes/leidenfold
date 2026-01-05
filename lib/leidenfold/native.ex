@@ -46,4 +46,33 @@ defmodule Leidenfold.Native do
         _seed
       ),
       do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc """
+  Detect hierarchical communities using the Leiden algorithm.
+
+  Returns a list of levels, where each level is `{membership, n_communities, quality}`.
+  Level 0 is the finest (most communities), higher levels are coarser.
+
+  ## Additional Parameters
+    - max_levels: maximum number of hierarchy levels to generate
+    - min_size: minimum community size (communities smaller than this are excluded)
+
+  ## Returns
+    - `{:ok, levels}` on success, where levels is a list of `{membership, n_communities, quality}` tuples
+    - `{:error, reason}` on failure
+  """
+  def detect_hierarchical_communities(
+        _sources,
+        _targets,
+        _weights,
+        _n_nodes,
+        _directed,
+        _objective,
+        _resolution,
+        _n_iterations,
+        _seed,
+        _max_levels,
+        _min_size
+      ),
+      do: :erlang.nif_error(:nif_not_loaded)
 end
