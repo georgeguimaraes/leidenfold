@@ -93,6 +93,12 @@ fn detect_communities(
         return Err("sources and targets must have same length".to_string());
     }
 
+    if let Some(ref w) = weights {
+        if w.len() != sources.len() {
+            return Err("weights must have same length as edges".to_string());
+        }
+    }
+
     let n_edges = sources.len();
     let weights_ptr = weights
         .as_ref()
