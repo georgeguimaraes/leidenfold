@@ -33,6 +33,10 @@ jobs:
       matrix:
         otp: ["26", "27", "28"]
         elixir: ["1.17", "1.18", "1.19"]
+        exclude:
+          # OTP 28 requires Elixir 1.18+
+          - otp: "28"
+            elixir: "1.17"
 
     env:
       LEIDENFOLD_BUILD: "true"
