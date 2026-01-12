@@ -63,7 +63,7 @@ jobs:
 
       - name: Cache native libs
         id: cache-native
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.local
           key: native-libs-ubuntu-igraph-${{ env.IGRAPH_VERSION }}-libleidenalg-${{ env.LIBLEIDENALG_VERSION }}
@@ -101,7 +101,7 @@ jobs:
           make install
 
       - name: Cache mix deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             deps
