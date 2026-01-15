@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/georgeguimaraes/leidenfold/compare/v0.3.2...v0.3.3) (2026-01-15)
+
+
+### Bug Fixes
+
+* mark release PR as tagged after creating tag ([e909da7](https://github.com/georgeguimaraes/leidenfold/commit/e909da79ca6c755382cadaaac8c6e4a5cf92cad4))
+
 ## [0.2.0](https://github.com/georgeguimaraes/leidenfold/compare/v0.1.5...v0.2.0) (2026-01-05)
 
 
