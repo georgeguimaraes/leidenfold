@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -37,3 +38,10 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
         # The tag push will trigger the build-nif workflow which creates the release
+
+      - name: Mark release PR as tagged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr edit "$PR_NUMBER" --remove-label "autorelease: pending" --add-label "autorelease: tagged"
