@@ -185,12 +185,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
-          shopt -s globstar nullglob
-          files=(artifacts/**/*.tar.gz)
+          # download-artifact nests each archive in a directory of the same
+          # name, so match files only or gh tries to read the directories.
+          mapfile -t files < <(find artifacts -type f -name "*.tar.gz" | sort)
           if [ ${#files[@]} -eq 0 ]; then
             echo "No archives to upload"
             exit 1
           fi
+          printf '%s\n' "${files[@]}"
           gh release upload "${{ env.RELEASE_TAG }}" "${files[@]}" --clobber
 
   update_checksums:
