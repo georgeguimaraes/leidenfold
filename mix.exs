@@ -8,7 +8,7 @@ defmodule Leidenfold.MixProject do
     [
       app: :leidenfold,
       version: @version,
-      elixir: "~> 1.15",
+      elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: "Elixir bindings for the Leiden community detection algorithm",
@@ -25,7 +25,7 @@ defmodule Leidenfold.MixProject do
 
   defp deps do
     [
-      {:rustler, "~> 0.37.1", optional: true},
+      {:rustler, "~> 0.38", optional: true},
       {:rustler_precompiled, "~> 0.8"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]

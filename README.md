@@ -211,7 +211,7 @@ LEIDENFOLD_BUILD=true \
 
 The CI pipeline runs on GitHub Actions:
 
-1. **Test job** - Runs on Linux with OTP 26/27/28 and Elixir 1.17/1.18/1.19 (8 combinations)
+1. **Test job** - Runs on Linux with Elixir 1.20 / OTP 29, Elixir 1.19 / OTP 28 and Elixir 1.18 / OTP 27
 2. **Build and Publish** - Triggered on version tags (`v*`), builds precompiled NIFs:
    - macOS ARM64 (Apple Silicon)
    - Linux x86_64
