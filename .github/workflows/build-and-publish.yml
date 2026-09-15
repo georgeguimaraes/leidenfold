@@ -178,16 +178,20 @@ jobs:
       - name: List artifacts
         run: find artifacts -type f
 
-      - name: Publish to GitHub Releases
-        uses: softprops/action-gh-release@v3
-        with:
-          # release-please creates the release with RELEASE_PAT before this
-          # job runs. Updating it with the workflow token gets a 403, so use
-          # the same token here.
-          token: ${{ secrets.RELEASE_PAT }}
-          tag_name: ${{ env.RELEASE_TAG }}
-          files: artifacts/**/*.tar.gz
-          fail_on_unmatched_files: true
+      # release-please already created the release for this tag. softprops
+      # insists on updating the release before uploading and that PATCH gets
+      # a 403 whichever token it runs with, so upload the assets directly.
+      - name: Upload assets to the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          shopt -s globstar nullglob
+          files=(artifacts/**/*.tar.gz)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No archives to upload"
+            exit 1
+          fi
+          gh release upload "${{ env.RELEASE_TAG }}" "${files[@]}" --clobber
 
   update_checksums:
     name: Update checksums
