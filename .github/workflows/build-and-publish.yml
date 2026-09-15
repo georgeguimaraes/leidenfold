@@ -9,6 +9,9 @@ on:
       libleidenalg_version:
         type: string
         default: "0.11.1"
+      version:
+        type: string
+        default: ""
   workflow_dispatch:
     inputs:
       igraph_version:
@@ -17,6 +20,9 @@ on:
       libleidenalg_version:
         description: "libleidenalg version"
         default: "0.11.1"
+      version:
+        description: "Release tag to build and publish for (e.g. v0.4.0). Defaults to the pushed ref."
+        default: ""
 
 permissions:
   contents: write
@@ -24,6 +30,9 @@ permissions:
 env:
   IGRAPH_VERSION: ${{ inputs.igraph_version }}
   LIBLEIDENALG_VERSION: ${{ inputs.libleidenalg_version }}
+  # A tag push sets this from the ref; workflow_dispatch can point at an
+  # existing tag to rebuild its assets from main.
+  RELEASE_TAG: ${{ inputs.version || github.ref_name }}
 
 jobs:
   build_release:
@@ -119,24 +128,18 @@ jobs:
         env:
           TARGET: ${{ matrix.job.target }}
           NIF_VERSION: ${{ matrix.nif }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ env.RELEASE_TAG }}
         run: |
-          echo "=== Searching for built library ==="
-          find . -name "libleidenfold_native.*" -type f 2>/dev/null || true
+          # rustler copies the finished NIF into priv/native as
+          # leidenfold_native.so on every platform (no lib prefix, .so even on
+          # macOS), which is exactly what rustler_precompiled expects. Fall
+          # back to cargo's own output; its target dir moved from native/ to
+          # the repo root in rustler 0.38.
+          LIB_PATH=$(find -H _build priv target native -type f \
+            \( -name "leidenfold_native.so" -o -name "libleidenfold_native.so" -o -name "libleidenfold_native.dylib" \) \
+            -not -path "*/deps/*" 2>/dev/null | sort | sed -n 1p)
 
-          if [ -f "priv/native/libleidenfold_native.so" ]; then
-            LIB_PATH="priv/native/libleidenfold_native.so"
-          elif [ -f "priv/native/libleidenfold_native.dylib" ]; then
-            LIB_PATH="priv/native/libleidenfold_native.dylib"
-          elif [ -f "native/leidenfold_native/target/$TARGET/release/libleidenfold_native.so" ]; then
-            LIB_PATH="native/leidenfold_native/target/$TARGET/release/libleidenfold_native.so"
-          elif [ -f "native/leidenfold_native/target/$TARGET/release/libleidenfold_native.dylib" ]; then
-            LIB_PATH="native/leidenfold_native/target/$TARGET/release/libleidenfold_native.dylib"
-          elif [ -f "native/leidenfold_native/target/release/libleidenfold_native.so" ]; then
-            LIB_PATH="native/leidenfold_native/target/release/libleidenfold_native.so"
-          elif [ -f "native/leidenfold_native/target/release/libleidenfold_native.dylib" ]; then
-            LIB_PATH="native/leidenfold_native/target/release/libleidenfold_native.dylib"
-          else
+          if [ -z "$LIB_PATH" ]; then
             echo "No library found!"
             exit 1
           fi
@@ -178,6 +181,7 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           files: artifacts/**/*.tar.gz
 
   update_checksums:
@@ -197,7 +201,7 @@ jobs:
         run: |
           mkdir -p release_assets
           cd release_assets
-          gh release download "${{ github.ref_name }}" --pattern "*.tar.gz"
+          gh release download "${{ env.RELEASE_TAG }}" --pattern "*.tar.gz"
 
       - name: Generate checksums
         run: |
@@ -227,7 +231,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: Update checksums for ${{ github.ref_name }}"
+            git commit -m "chore: Update checksums for ${{ env.RELEASE_TAG }}"
             git push origin main
           fi
 
