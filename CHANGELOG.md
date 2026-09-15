@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.1](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.0...v0.4.1) (2026-09-15)
+
+
+### Continuous Integration
+
+* Find the NIF where rustler 0.38 puts it and allow rebuilding a tag's assets ([#25](https://github.com/georgeguimaraes/leidenfold/issues/25)) ([91c3124](https://github.com/georgeguimaraes/leidenfold/commit/91c312459884e908df2bde89fd10ac4d250f67d0))
+* Upload only files from the artifacts directory ([#29](https://github.com/georgeguimaraes/leidenfold/issues/29)) ([9458492](https://github.com/georgeguimaraes/leidenfold/commit/945849251b3041bad822811b0de17b0fc291b61c))
+* Upload release assets with gh instead of softprops ([#28](https://github.com/georgeguimaraes/leidenfold/issues/28)) ([91f68fe](https://github.com/georgeguimaraes/leidenfold/commit/91f68fe65255372eda940f1cdba8d9fad11b649e))
+* Upload release assets with RELEASE_PAT ([#27](https://github.com/georgeguimaraes/leidenfold/issues/27)) ([6a3b11d](https://github.com/georgeguimaraes/leidenfold/commit/6a3b11dd14da2330d515312ca63f181a43e6c7fd))
+
 ## [0.4.0](https://github.com/georgeguimaraes/leidenfold/compare/v0.3.2...v0.4.0) (2026-09-15)
 
 
