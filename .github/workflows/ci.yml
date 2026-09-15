@@ -30,13 +30,12 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        otp: ["26", "27", "28"]
-        elixir: ["1.17", "1.18", "1.19"]
-        exclude:
-          # OTP 28 requires Elixir 1.18+
-          - otp: "28"
-            elixir: "1.17"
+        include:
+          - { elixir: "1.20", otp: "29" }
+          - { elixir: "1.19", otp: "28" }
+          - { elixir: "1.18", otp: "27" }
 
     env:
       LEIDENFOLD_BUILD: "true"
@@ -45,7 +44,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -63,7 +62,7 @@ jobs:
 
       - name: Cache native libs
         id: cache-native
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.local
           key: native-libs-ubuntu-igraph-${{ env.IGRAPH_VERSION }}-libleidenalg-${{ env.LIBLEIDENALG_VERSION }}
@@ -101,7 +100,7 @@ jobs:
           make install
 
       - name: Cache mix deps
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             deps
