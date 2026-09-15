@@ -1,11 +1,11 @@
 %{
-  "libleidenfold_native-v0.4.0-nif-2.15-aarch64-apple-darwin.so.tar.gz" => "sha256:860e5784732e3d53c1a70fd18007a29c6b6c603234e120d0ca13bd4836495937",
-  "libleidenfold_native-v0.4.0-nif-2.15-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:e99d760ef8f69892d124b926323d8c5341e0655d270ed8b7035ffe41b646da8c",
-  "libleidenfold_native-v0.4.0-nif-2.15-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:255e9ccb114f35e40680401a931e1be5c3abde325bfc343164d0094b3c574aed",
-  "libleidenfold_native-v0.4.0-nif-2.16-aarch64-apple-darwin.so.tar.gz" => "sha256:dae7201a105b1400fba7b2da2b88c53f035d2e8295bfeba4b9203735be7f310a",
-  "libleidenfold_native-v0.4.0-nif-2.16-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:f134f687d1efa40a37857039410912cfad577885404ade7bc523ebea4cebf43f",
-  "libleidenfold_native-v0.4.0-nif-2.16-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:db6241a0258ea5846473071d739e53a0feb46d048b1fa50fbbc9acdea87fade5",
-  "libleidenfold_native-v0.4.0-nif-2.17-aarch64-apple-darwin.so.tar.gz" => "sha256:09742261d7ba135697418ff6cfb76243f4540677e9ff83eee89a16a55aac9d16",
-  "libleidenfold_native-v0.4.0-nif-2.17-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:920a1a936b020a50c720e29b44fb7959297d839514b5f3ed5f4bd480038eadd9",
-  "libleidenfold_native-v0.4.0-nif-2.17-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:0e3fd91b25af3b80d26429be231b4dfff32df82fe1960ebdd52b4b27d766f87d"
+  "libleidenfold_native-v0.4.1-nif-2.15-aarch64-apple-darwin.so.tar.gz" => "sha256:f1a8ad4e3649117ef06c14fad1bfa87d7c8c1cadb4f49b915c66c8a8cc7d168f",
+  "libleidenfold_native-v0.4.1-nif-2.15-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:ba0896436322c3332af832305a20b4e7821fd2f5b1e776f3e565f858e87a916d",
+  "libleidenfold_native-v0.4.1-nif-2.15-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:41281f2ca8a7da1b6d75f701bf9c45fbc2ec1125da6de010b8d77f7ad88ed818",
+  "libleidenfold_native-v0.4.1-nif-2.16-aarch64-apple-darwin.so.tar.gz" => "sha256:2f2e1035d272ab274220e8d99faee6b732fdff9508553cf23907b129b04cb525",
+  "libleidenfold_native-v0.4.1-nif-2.16-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:953f4e8c74f38a9d6ea38d5d57a519791ac27e3935cde452824b58f7589def95",
+  "libleidenfold_native-v0.4.1-nif-2.16-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:ad17b6350f64aa679b3c0f8262ed3bb933516436926a72cc362ec2e80bce3e8f",
+  "libleidenfold_native-v0.4.1-nif-2.17-aarch64-apple-darwin.so.tar.gz" => "sha256:e30ae94def9aed0100f9aff98f2786c73481f26e87515a03ed598b9750106d35",
+  "libleidenfold_native-v0.4.1-nif-2.17-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:da9a9a5ed00df05aee8e99af2b2a0691556cece205a14b98d8fca8f2c56ac578",
+  "libleidenfold_native-v0.4.1-nif-2.17-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:56a7395c8073fdd3f18bd25f357aa8ed095b0b0b80050568f0244af9fcc8e452"
 }
