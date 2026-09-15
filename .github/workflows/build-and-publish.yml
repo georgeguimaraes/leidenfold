@@ -54,8 +54,8 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "26"
-          elixir-version: "1.16"
+          otp-version: "27"
+          elixir-version: "1.18"
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
@@ -244,8 +244,8 @@ jobs:
       - name: Install Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "26"
-          elixir-version: "1.16"
+          otp-version: "27"
+          elixir-version: "1.18"
 
       - name: Get dependencies
         run: |
