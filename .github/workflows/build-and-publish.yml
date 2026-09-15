@@ -181,8 +181,13 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v3
         with:
+          # release-please creates the release with RELEASE_PAT before this
+          # job runs. Updating it with the workflow token gets a 403, so use
+          # the same token here.
+          token: ${{ secrets.RELEASE_PAT }}
           tag_name: ${{ env.RELEASE_TAG }}
           files: artifacts/**/*.tar.gz
+          fail_on_unmatched_files: true
 
   update_checksums:
     name: Update checksums
@@ -197,7 +202,7 @@ jobs:
 
       - name: Download release assets
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           mkdir -p release_assets
           cd release_assets
