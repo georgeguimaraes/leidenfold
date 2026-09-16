@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.2](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.1...v0.4.2) (2026-09-16)
+
+
+### Miscellaneous
+
+* Update checksums for v0.4.1 ([9d14fbc](https://github.com/georgeguimaraes/leidenfold/commit/9d14fbc184d8db946ee06b9ee48f4d66fae59b20))
+
+
+### Documentation
+
+* Point the install snippet at the current release ([623b406](https://github.com/georgeguimaraes/leidenfold/commit/623b4060121d06a2e928b0be0e250316ef7f5679))
+
 ## [0.4.1](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.0...v0.4.1) (2026-09-15)
 
 
