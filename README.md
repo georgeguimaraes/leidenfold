@@ -11,7 +11,7 @@ Add `leidenfold` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:leidenfold, "~> 0.2.0"}
+    {:leidenfold, "~> 0.4"}
   ]
 end
 ```
