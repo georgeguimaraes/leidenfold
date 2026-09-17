@@ -4,13 +4,19 @@ updates:
     directory: /
     schedule:
       interval: daily
+    commit-message:
+      prefix: "chore(deps)"
 
   - package-ecosystem: cargo
     directory: /native/leidenfold_native
     schedule:
       interval: daily
+    commit-message:
+      prefix: "chore(deps)"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: daily
+    commit-message:
+      prefix: "chore(deps)"
