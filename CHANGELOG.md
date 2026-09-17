@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.3](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.2...v0.4.3) (2026-09-17)
+
+
+### Miscellaneous
+
+* Pin Dependabot commit prefix to chore(deps) ([8a8afe7](https://github.com/georgeguimaraes/leidenfold/commit/8a8afe7055a0d40e7bd9c3d46e234cd9d78efda0))
+* Update checksums for v0.4.2 ([e711ea9](https://github.com/georgeguimaraes/leidenfold/commit/e711ea929189cf585147b76982372a656f6396cd))
+
 ## [0.4.2](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.1...v0.4.2) (2026-09-16)
 
 
