@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.3...v0.4.4) (2026-10-16)
+
+
+### Miscellaneous
+
+* **deps:** update rustler requirement from 0.38 to 0.39 in /native/leidenfold_native ([#33](https://github.com/georgeguimaraes/leidenfold/issues/33)) ([899753e](https://github.com/georgeguimaraes/leidenfold/commit/899753eeebff84db46de1d12270373f42e517ffc))
+* Update checksums for v0.4.3 ([d5bc8a8](https://github.com/georgeguimaraes/leidenfold/commit/d5bc8a8ee71675af1ea175f425b38ebc15dceb93))
+
 ## [0.4.3](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.2...v0.4.3) (2026-09-17)
 
 
