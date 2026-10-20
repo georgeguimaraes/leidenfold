@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.4](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.3...v0.4.4) (2026-10-20)
+
+
+### Miscellaneous
+
+* **ci:** Pin georgeguimaraes/workflows to v1.0.1 ([d0aece7](https://github.com/georgeguimaraes/leidenfold/commit/d0aece7387959b6f99cc532ddf798d798e4eddcf))
+* **ci:** Pin GitHub Actions to commit SHAs ([ef36f65](https://github.com/georgeguimaraes/leidenfold/commit/ef36f65b650796deadc01d6b55b6dd2c05471d4c))
+* **deps:** update rustler requirement from 0.38 to 0.39 in /native/leidenfold_native ([#33](https://github.com/georgeguimaraes/leidenfold/issues/33)) ([899753e](https://github.com/georgeguimaraes/leidenfold/commit/899753eeebff84db46de1d12270373f42e517ffc))
+* Update checksums for v0.4.3 ([d5bc8a8](https://github.com/georgeguimaraes/leidenfold/commit/d5bc8a8ee71675af1ea175f425b38ebc15dceb93))
+
 ## [0.4.3](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.2...v0.4.3) (2026-09-17)
 
 
