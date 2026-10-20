@@ -11,6 +11,6 @@ permissions:
 
 jobs:
   release-please:
-    uses: georgeguimaraes/workflows/.github/workflows/release-please.yml@9208861c12989fe1a96df2fe41a2e7dd4bd5fb59 # main
+    uses: georgeguimaraes/workflows/.github/workflows/release-please.yml@0895359397b7e82725d0dce6d5fc2af8068a6ea1 # v1.0.1
     secrets:
       token: ${{ secrets.RELEASE_PAT }}
