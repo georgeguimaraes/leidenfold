@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.4](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.3...v0.4.4) (2026-11-24)
+
+
+### Bug Fixes
+
+* **ci:** Grant id-token: write to the publish call in CI ([e14cb38](https://github.com/georgeguimaraes/leidenfold/commit/e14cb38e62faa58592f119009bb40f6ea47400f2))
+
+
+### Miscellaneous
+
+* **ci:** Check formatting on the Elixir 1.20 test job ([8cccfd7](https://github.com/georgeguimaraes/leidenfold/commit/8cccfd71134b5bc34633a46b83465172e293256c))
+* **ci:** Pin georgeguimaraes/workflows to v1.0.1 ([d0aece7](https://github.com/georgeguimaraes/leidenfold/commit/d0aece7387959b6f99cc532ddf798d798e4eddcf))
+* **ci:** Pin GitHub Actions to commit SHAs ([ef36f65](https://github.com/georgeguimaraes/leidenfold/commit/ef36f65b650796deadc01d6b55b6dd2c05471d4c))
+* **ci:** Publish to Hex with a workload identity instead of an API key ([bc403df](https://github.com/georgeguimaraes/leidenfold/commit/bc403dfc6cd73ed178f324dea89433318b379c15))
+* **deps:** bump rustler_precompiled from 0.9.0 to 0.10.1 ([#32](https://github.com/georgeguimaraes/leidenfold/issues/32)) ([71f73f8](https://github.com/georgeguimaraes/leidenfold/commit/71f73f8569495224b5feae7001f2493b9674e6e2))
+* **deps:** update rustler requirement from 0.38 to 0.39 in /native/leidenfold_native ([#33](https://github.com/georgeguimaraes/leidenfold/issues/33)) ([899753e](https://github.com/georgeguimaraes/leidenfold/commit/899753eeebff84db46de1d12270373f42e517ffc))
+* Update checksums for v0.4.3 ([d5bc8a8](https://github.com/georgeguimaraes/leidenfold/commit/d5bc8a8ee71675af1ea175f425b38ebc15dceb93))
+
 ## [0.4.3](https://github.com/georgeguimaraes/leidenfold/compare/v0.4.2...v0.4.3) (2026-09-17)
 
 
