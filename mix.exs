@@ -37,7 +37,8 @@ defmodule Leidenfold.MixProject do
       maintainers: ["George Guimaraes"],
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
-      files: ~w(lib native .formatter.exs mix.exs README.md LICENSE checksum-Elixir.Leidenfold.Native.exs)
+      files:
+        ~w(lib native .formatter.exs mix.exs README.md LICENSE checksum-Elixir.Leidenfold.Native.exs)
     ]
   end
 end

@@ -266,7 +266,9 @@ defmodule Leidenfold do
   @doc """
   Same as `detect_hierarchical/3` but raises on error.
   """
-  @spec detect_hierarchical!([integer()], [integer()], [hierarchical_option()]) :: [level_result()]
+  @spec detect_hierarchical!([integer()], [integer()], [hierarchical_option()]) :: [
+          level_result()
+        ]
   def detect_hierarchical!(sources, targets, opts \\ []) do
     case detect_hierarchical(sources, targets, opts) do
       {:ok, result} -> result
